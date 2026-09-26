@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: leaders-academia-chatbot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
