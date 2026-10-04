@@ -1,6 +1,14 @@
 pypdf
 sentence-transformers
 faiss-cpu
-google-generativeai
+google-genai
+groq
 gradio
 numpy
+soundfile
+fastapi
+uvicorn
+requests
+edge-tts
+gspread
+google-auth
