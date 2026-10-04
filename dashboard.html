@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Leaders Academia · Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --bg:#eceefe;--card:#ffffffd9;--ink:#1e1b3a;--mute:#6b6f8d;--line:#e6e8f7;
+  --side:#2a1f6b;--side2:#4c2a9a;--brand:#7c5cff;--brand2:#22c1dc;--acc:#f472b6;
+  --in:#ffffff;--out:#e4dcff;--chat:#f4f2ff;
+  --shadow:0 14px 40px -12px #4c2a9a40,0 2px 6px #4c2a9a14;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;overflow:hidden}
+.blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(135deg,#eef0ff,#f7ecff 55%,#e6f8fd)}
+.blobs i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;animation:fl 18s ease-in-out infinite alternate}
+.blobs i:nth-child(1){width:460px;height:460px;background:#8b7bff;left:-120px;top:-100px}
+.blobs i:nth-child(2){width:420px;height:420px;background:#22c1dc;right:-100px;top:25%;animation-delay:-6s}
+.blobs i:nth-child(3){width:380px;height:380px;background:#f9a8d4;left:35%;bottom:-160px;animation-delay:-11s}
+@keyframes fl{0%{transform:translate(0,0) scale(1)}50%{transform:translate(50px,-40px) scale(1.12)}100%{transform:translate(-40px,50px) scale(.95)}}
+button{font:inherit;cursor:pointer;border:0}
+svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- login ---------- */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(900px 500px at 15% 10%,#8b7bff88,transparent),radial-gradient(800px 500px at 90% 90%,#f472b688,transparent),#2a1f6b;z-index:20}
+#login form{width:340px;background:#ffffffee;backdrop-filter:blur(10px);border-radius:26px;padding:30px 28px;box-shadow:0 30px 80px #0008}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo i{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;font-style:normal;font-weight:800}
+.logo b{font-size:18px}
+#login p.s{margin:0 0 18px;color:var(--mute)}
+#login input{width:100%;padding:12px 13px;margin:6px 0;border:1px solid #d5dbe6;border-radius:10px;font:inherit;outline:none}
+#login input:focus{border-color:var(--brand);box-shadow:0 0 0 3px #7c5cff30}
+#login .go{width:100%;margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#c05cf0);color:#fff;font-weight:600}
+#err{color:#b91c1c;margin:10px 0 0;min-height:18px;font-size:13px}
+
+/* ---------- shell ---------- */
+#app{display:none;height:100vh;padding:16px;gap:16px;position:relative;z-index:1}
+aside{width:240px;background:linear-gradient(165deg,var(--side),var(--side2));color:#d9d2ff;display:flex;flex-direction:column;padding:18px 12px;flex:none;border-radius:26px;box-shadow:var(--shadow),inset 0 1px 0 #ffffff22}
+aside .logo{padding:4px 8px 18px;color:#fff}
+aside .logo small{display:block;color:#b9aef5;font-size:11px;font-weight:400}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a99cf0;margin:14px 10px 6px}
+.nb{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;border-radius:14px;background:transparent;color:#d9d2ff;text-align:left;margin-bottom:3px;transition:.18s}
+.nb:hover{background:#ffffff1a;color:#fff;transform:translateX(3px)}
+.nb.on{background:linear-gradient(135deg,#8b7bff,#f472b6);color:#fff;box-shadow:0 10px 24px -6px #f472b688;transform:none}
+.nb .bd{margin-left:auto;background:#ffffff22;border-radius:20px;padding:1px 8px;font-size:11.5px}
+.nb.on .bd{background:#ffffff33}
+.grow{flex:1}
+.live{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:12px;color:#b9aef5}
+.live i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 #22c55e88;animation:p 1.8s infinite}
+@keyframes p{70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
+
+section#main{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+header#top{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--card);backdrop-filter:blur(14px);border:1px solid #ffffffaa;border-radius:22px;box-shadow:var(--shadow);flex:none}
+header#top h1{margin:0;font-size:20px}
+header#top p{margin:2px 0 0;color:var(--mute);font-size:12.5px}
+.chips{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px 14px;min-width:92px;box-shadow:0 4px 12px -6px #4c2a9a30}
+.chip b{display:block;font-size:18px;line-height:1.1}
+.chip span{font-size:11px;color:var(--mute)}
+.chip.g b{color:#15803d}.chip.r b{color:#b91c1c}.chip.b b{color:#1d4ed8}
+#body{flex:1;min-height:0;display:flex;gap:16px}
+
+/* ---------- chat layout ---------- */
+#list{width:340px;background:var(--card);backdrop-filter:blur(14px);border:1px solid #ffffffaa;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;display:none;flex-direction:column;flex:none}
+.sbox{padding:12px;border-bottom:1px solid var(--line)}
+.sbox label{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:0 12px;color:var(--mute)}
+.sbox input{flex:1;border:0;background:transparent;padding:10px 0;font:inherit;outline:none;color:var(--ink)}
+#items{overflow-y:auto;flex:1}
+.it{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid #f1f3f7;cursor:pointer;transition:.12s}
+.it:hover{background:#f6f4ff}.it.on{background:linear-gradient(90deg,#ece6ff,#fff);box-shadow:inset 3px 0 0 var(--brand)}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;flex:none;font-size:16px}
+.it .t{flex:1;min-width:0}
+.it .r1{display:flex;justify-content:space-between;gap:8px}
+.it .r1 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .r1 span{color:var(--mute);font-size:11.5px;white-space:nowrap}
+.it .r2{color:var(--mute);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 5px}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin-right:4px}
+.s-Interested{background:#dcfce7;color:#166534}
+.s-Not{background:#fee2e2;color:#991b1b}
+.s-Follow{background:#fef3c7;color:#92400e}
+.s-Enrolled{background:#dbeafe;color:#1e40af}
+.s-fwd{background:#ede9fe;color:#5b21b6}
+.e{color:#94a3b8;text-align:center;padding:50px 20px}
+
+#conv{flex:1;min-width:0;display:none;flex-direction:column;position:relative;background:var(--card);backdrop-filter:blur(14px);border:1px solid #ffffffaa;border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+#ch{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#ffffffb0;border-bottom:1px solid var(--line)}
+#ch .nm{font-weight:700}#ch .sub{font-size:12px;color:var(--mute)}
+#ch .tools{margin-left:auto;display:flex;gap:8px}
+.pbtn{display:flex;align-items:center;gap:7px;border-radius:12px;padding:0 14px;height:36px;font-weight:600;font-size:12.5px;background:#fff1d6;color:#b45309;border:1px solid #fbd38d}
+.pbtn.on{background:#dcfce7;color:#166534;border-color:#86efac}
+.pbtn svg{width:15px;height:15px}
+.s-paused{background:#fff1d6;color:#b45309}
+.pausebar{background:#fff7e0;border-bottom:1px solid #fbd38d;color:#92400e;font-size:12.5px;padding:8px 18px}
+.ib#ibDel{display:grid;color:#b91c1c;background:#fee2e2}
+.danger{margin-top:18px;padding:16px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-color:#fecaca}
+.danger .tx{flex:1;min-width:240px;font-size:13px}.danger .tx b{font-size:14px;color:#991b1b}
+.btn.dg{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.ib{background:#f1eeff;border-radius:12px;width:36px;height:36px;display:none;place-items:center;color:var(--ink)}
+#back{display:none}
+#msgs{flex:1;overflow-y:auto;padding:18px 7%;background:linear-gradient(180deg,#f6f3ff,#f0f9ff);
+  background-image:radial-gradient(#7c5cff14 1.2px,transparent 1.2px);background-size:20px 20px}
+.day{text-align:center;margin:14px 0}
+.day span{background:#fff;color:#6b6f8d;font-size:12px;padding:4px 14px;border-radius:20px;box-shadow:0 4px 10px -6px #4c2a9a50}
+.row{display:flex;margin:3px 0}.row.out{justify-content:flex-end}
+.bub{max-width:min(620px,78%);padding:8px 12px 6px;border-radius:16px;box-shadow:0 4px 12px -6px #4c2a9a40;position:relative;line-height:1.45}
+.bub.in{background:var(--in);border-top-left-radius:3px}
+.bub.out{background:var(--out);border-top-right-radius:4px}
+.bub.adm{background:#fff1d6;border:1px solid #fbd38d}
+.bub.adm .who{color:#b45309!important}
+.bub .who{font-size:11px;font-weight:700;margin-bottom:2px}
+.bub.in .who{color:#0e7490}.bub.out .who{color:#6d4ff0}
+.txt{white-space:pre-wrap;word-break:break-word;font-size:14px}
+.txt a{color:#6d4ff0}
+.meta{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:10.5px;color:#64748b;margin-top:2px}
+.vn{display:inline-flex;align-items:center;gap:5px;background:#0000000d;border-radius:20px;padding:2px 9px;font-size:11.5px;margin-bottom:4px}
+.th{background:transparent;color:#94a3b8;font-size:13px;padding:0 2px}.th.on{color:#f59e0b}.th:hover{color:#f59e0b}
+#msgs .none{margin-top:20%;text-align:center;color:#6b7280}
+.empty-conv{flex:1;display:grid;place-items:center;color:#9a9cc0;text-align:center;background:linear-gradient(180deg,#f6f3ff,#f0f9ff)}
+.empty-conv div{max-width:300px}.empty-conv svg{width:54px;height:54px;margin-bottom:8px;opacity:.6}
+
+#info{width:300px;background:var(--card);backdrop-filter:blur(14px);border:1px solid #ffffffaa;border-radius:22px;box-shadow:var(--shadow);overflow-y:auto;padding:20px 18px;display:none;flex:none}
+#info .big{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:16px}
+#info .big .av{width:76px;height:76px;font-size:28px;margin-bottom:10px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.kv span{color:var(--mute)}.kv b{text-align:right;font-weight:600}
+#info h4{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute)}
+.tl{border-left:2px solid var(--line);margin-left:6px;padding-left:14px}
+.tl div{position:relative;font-size:13px;padding:5px 0}
+.tl div:before{content:"";position:absolute;left:-20px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.sheetnote{margin-top:16px;font-size:12px;background:#f1eeff;border:1px solid #d9d0ff;color:#4c2a9a;border-radius:12px;padding:9px 11px}
+
+/* ---------- full pane pages ---------- */
+#pane{flex:1;overflow-y:auto;padding:4px 6px 20px;display:none}
+.card{background:var(--card);backdrop-filter:blur(14px);border:1px solid #ffffffaa;border-radius:22px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+.kp .card:hover,.gr .card:hover{transform:translateY(-3px)}
+table{width:100%;border-collapse:collapse}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);text-align:left;padding:12px 16px;background:#f6f4ff;border-bottom:1px solid var(--line)}
+td{padding:13px 16px;border-bottom:1px solid #f1f3f7}
+tr.cl{cursor:pointer}tr.cl:hover td{background:#f6f4ff}
+.tw{overflow:auto;border-radius:22px}
+.up{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:18px}
+.up input[type=text]{padding:11px 12px;border:1px solid #d5dbe6;border-radius:10px;font:inherit;outline:none}
+.up input[type=text]:focus{border-color:var(--brand)}
+.drop{grid-column:1/-1;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;color:var(--mute);cursor:pointer}
+.drop.h{border-color:var(--brand);background:#f1eeff}
+.btn{background:linear-gradient(135deg,var(--brand),#c05cf0);color:#fff;padding:11px 18px;border-radius:14px;font-weight:600;box-shadow:0 10px 20px -10px #7c5cff;transition:.15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.d{background:#fee2e2;color:#991b1b;padding:7px 12px;font-size:12.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;margin-top:20px}
+.mc{overflow:hidden}.mc img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#e5e7eb}
+.mc div{padding:12px}.mc small{color:var(--mute);display:block;margin:3px 0 10px}
+
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.k{padding:16px 18px;position:relative;overflow:hidden}
+.k small{color:var(--mute);font-size:12px}.k b{display:block;font-size:28px;margin:4px 0 2px;line-height:1.1}
+.k .d{font-size:12px;font-weight:600}.d.ps{color:#15803d}.d.ng{color:#b91c1c}.d.eq{color:var(--mute)}
+.k:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c,#7c5cff)}
+.gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+.gr .wide{grid-column:1/-1}
+.cc{padding:16px 18px}.cc h3{margin:0 0 2px;font-size:15px}.cc p{margin:0 0 12px;color:var(--mute);font-size:12px}
+.cc svg.cv{width:100%;height:auto;display:block;overflow:visible}
+.cc svg text{stroke:none}.cc svg.cv text{font-size:10.5px;fill:#64748b}
+.cc svg.cv rect{stroke:none}.cc svg.dn{width:180px;height:180px}
+.lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--mute)}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.rng{display:flex;gap:6px;margin-bottom:16px;align-items:center}
+.rng button{background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 16px;color:var(--mute);box-shadow:0 4px 10px -6px #4c2a9a40}
+.rng button.on{background:linear-gradient(135deg,var(--brand),#c05cf0);color:#fff;border-color:transparent}
+.hb{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.hb span.n{width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb .bar{flex:1;background:#eeeaff;border-radius:6px;height:12px;overflow:hidden}
+.hb .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--brand2),var(--brand))}
+.hb b{width:34px;text-align:right}
+.dn-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.dn-wrap .lg{flex-direction:column;gap:8px;margin:0;font-size:13px;color:var(--ink)}
+.sh{padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.sh .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.sh .tx{flex:1;min-width:240px;font-size:13px}.sh .tx b{font-size:14px}
+.sh .er{color:#b91c1c;font-size:12.5px;margin-top:3px;word-break:break-word}.sh .ok{color:var(--mute);font-size:12.5px;margin-top:3px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9;background:#2a1f6b;color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
+#toast.s{opacity:1}
+
+#cmpw{display:flex;gap:10px;align-items:flex-end;padding:12px 16px;background:#ffffffc0;border-top:1px solid var(--line)}
+#cmp{flex:1;resize:none;border:1px solid #d9d0ff;border-radius:16px;padding:11px 14px;font:inherit;outline:none;max-height:120px;min-height:44px;background:#fff}
+#cmp:focus{border-color:var(--brand);box-shadow:0 0 0 3px #7c5cff26}
+#cmpb{background:linear-gradient(135deg,var(--brand),#c05cf0);color:#fff;border-radius:14px;height:44px;padding:0 18px;font-weight:600;display:flex;align-items:center;gap:8px}
+#cmpb:disabled{opacity:.5;cursor:default}
+.cmphint{font-size:11.5px;color:var(--mute);padding:0 18px 8px;background:#ffffffc0}
+
+/* ---------- responsive ---------- */
+@media(max-width:1280px){
+  #info{position:absolute;right:0;top:0;bottom:0;z-index:5;box-shadow:-10px 0 30px #0002;transform:translateX(100%);transition:.25s;display:block}
+  #info.open{transform:none}
+  .ib#ibInfo{display:grid}
+}
+@media(max-width:900px){
+  #app{padding:8px;gap:8px}
+  aside{width:68px;padding:12px 8px}
+  aside .logo div,.nb span,.nb .bd,.sec,.live span{display:none}
+  .nb{justify-content:center}
+  header#top{flex-wrap:wrap;padding:12px 14px}.chips{margin-left:0}
+  #list{width:100%}
+  #body.conv #list{display:none!important}
+  #body:not(.conv) #conv{display:none!important}
+  #back{display:grid}
+  #msgs{padding:14px 10px}
+}
+</style>
+</head>
+<body>
+<div class="blobs"><i></i><i></i><i></i></div>
+
+<div id="login">
+  <form onsubmit="login();return false">
+    <div class="logo"><i>L</i><b>Leaders Academia</b></div>
+    <p class="s">Admissions dashboard · please sign in</p>
+    <input id="u" placeholder="Username" autocomplete="username">
+    <input id="p" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="go">Sign in</button>
+    <p id="err"></p>
+  </form>
+</div>
+
+<div id="app">
+  <aside>
+    <div class="logo"><i>L</i><div><b>Leaders Academia</b><small>WhatsApp Admissions Agent · v3</small></div></div>
+    <div class="sec">Overview</div>
+    <div id="nav0"></div>
+    <div class="sec">Conversations</div>
+    <div id="nav1"></div>
+    <div class="sec">Manage</div>
+    <div id="nav2"></div>
+    <div class="grow"></div>
+    <div class="live"><i></i><span>Live · auto-refresh</span></div>
+    <button class="nb" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button>
+  </aside>
+
+  <section id="main">
+    <header id="top">
+      <div><h1 id="ttl">Live Chats</h1><p id="sub"></p></div>
+      <div class="chips" id="chips"></div>
+    </header>
+    <div id="body">
+      <div id="list">
+        <div class="sbox"><label><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" placeholder="Search name, number or message"></label></div>
+        <div id="items"></div>
+      </div>
+      <div id="conv"></div>
+      <div id="info"></div>
+      <div id="pane"></div>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const IC={
+ chat:'<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>',
+ star:'<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+ ban:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>',
+ img:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>',
+ clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+ fwd:'<svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>',
+ mic:'<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
+ info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+ chart:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>',
+ trash:'<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>',
+ pause:'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+ play:'<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>',
+ back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>'
+};
+const VIEWS={
+ analytics:{t:'Dashboard',s:'Daily analytics and Google Sheet status',i:'chart',g:0},
+ live:{t:'Live Chats',s:'Conversations from the last 24 hours',i:'chat',g:1,chat:1,src:'live'},
+ int:{t:'Interested',s:'Students who showed interest in a course',i:'star',g:1,chat:1,f:'Interested'},
+ not:{t:'Not Interested',s:'Students who declined or are not interested',i:'ban',g:1,chat:1,f:'Not Interested'},
+ hist:{t:'History',s:'Every conversation, newest first',i:'clock',g:1,chat:1},
+ fol:{t:'Follow-ups',s:'Interested students waiting for a follow-up message',i:'bell',g:2,people:1},
+ fwd:{t:'Forwarded',s:'Students handed over to the team head',i:'fwd',g:2,people:1},
+ media:{t:'Media',s:'Posters the agent sends when a course is mentioned',i:'img',g:2}
+};
+let view='analytics',sel=null,ALL=[],LIVE=[],MSGS=[],sig='',lastSel=null,busy=false;
+
+/* ---------- time helpers (server time is UTC; shown in your local time) ---------- */
+const pt=s=>{if(!s)return null;const d=new Date(String(s).replace(' ','T')+'Z');return isNaN(d)?null:d};
+const tm=s=>{const d=pt(s);return d?d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''};
+function dayName(d){const t=new Date(),y=new Date(Date.now()-864e5);
+ if(d.toDateString()===t.toDateString())return 'Today';if(d.toDateString()===y.toDateString())return 'Yesterday';
+ return d.toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'})}
+function short(s){const d=pt(s);if(!d)return '';const t=new Date();
+ if(d.toDateString()===t.toDateString())return tm(s);
+ if(d.toDateString()===new Date(Date.now()-864e5).toDateString())return 'Yesterday';
+ return d.toLocaleDateString([], {day:'numeric',month:'short'})}
+const full=s=>{const d=pt(s);return d?d.toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''};
+
+function fmt(t){let x=esc(t);
+ x=x.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+ x=x.replace(/\*([^*\n]+)\*/g,'<b>$1</b>').replace(/_([^_\n]+)_/g,'<i>$1</i>');return x}
+const COL=['#7c5cff','#22c1dc','#f472b6','#f59e0b','#10b981','#6366f1','#ec4899','#0ea5e9'];
+function av(c){const k=c.name||c.phone||'?';let h=0;for(const ch of String(c.phone||k))h=(h*31+ch.charCodeAt(0))%997;
+ const l=c.name?c.name.trim()[0].toUpperCase():'#';return `<div class="av" style="background:${COL[h%COL.length]}">${esc(l)}</div>`}
+function pill(st){const k=(st||'').split(' ')[0];return `<span class="pill s-${esc(k)}">${esc(st||'—')}</span>`}
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.classList.add('s');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('s'),ms||1800)}
+
+/* ---------- api / auth ---------- */
+async function api(u,o){const r=await fetch(u,o);if(r.status==401){showLogin();throw new Error('auth')}return r.json()}
+function showLogin(){$('#login').style.display='flex';$('#app').style.display='none'}
+async function login(){
+ const r=await fetch('/dashboard/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:$('#u').value,password:$('#p').value})});
+ if(r.ok){$('#login').style.display='none';$('#app').style.display='flex';$('#err').textContent='';init()}else $('#err').textContent='Wrong username or password'}
+async function logout(){await fetch('/dashboard/logout',{method:'POST'});showLogin()}
+
+/* ---------- shell ---------- */
+function init(){
+ const mk=g=>Object.entries(VIEWS).filter(([k,v])=>v.g===g).map(([k,v])=>`<button class="nb" id="b_${k}" onclick="go('${k}')">${IC[v.i]}<span>${v.t}</span><em class="bd" id="n_${k}" style="font-style:normal;display:none"></em></button>`).join('');
+ $('#nav0').innerHTML=mk(0);$('#nav1').innerHTML=mk(1);$('#nav2').innerHTML=mk(2);go(view)}
+function go(v,p){
+ view=v;if(p!==undefined)sel=p;if(!p&&!VIEWS[v].chat)sel=sel;
+ document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('on',b.id==='b_'+v));
+ $('#ttl').textContent=VIEWS[v].t;$('#sub').textContent=VIEWS[v].s;
+ if(v!==lastView){sig='';}lastView=v;
+ $('#body').classList.toggle('conv',!!(VIEWS[v].chat&&sel));
+ refresh(true)}
+let lastView=null;
+
+function chatsFor(v){
+ const c=VIEWS[v];if(c.src==='live')return LIVE;
+ return c.f?ALL.filter(x=>x.status===c.f):ALL}
+
+function badges(){
+ const set=(k,n)=>{const e=$('#n_'+k);if(e){e.style.display=n?'inline-block':'none';e.textContent=n}};
+ set('live',LIVE.length);set('int',ALL.filter(x=>x.status==='Interested').length);
+ set('not',ALL.filter(x=>x.status==='Not Interested').length);set('hist',ALL.length)}
+function chips(){
+ const n=s=>ALL.filter(x=>x.status===s).length;
+ $('#chips').innerHTML=VIEWS[view].chat||VIEWS[view].people||view==='analytics'?
+ `<div class="chip"><b>${ALL.length}</b><span>Total chats</span></div>
+  <div class="chip g"><b>${n('Interested')}</b><span>Interested</span></div>
+  <div class="chip r"><b>${n('Not Interested')}</b><span>Not interested</span></div>
+  <div class="chip b"><b>${ALL.filter(x=>x.fwd_count>0).length}</b><span>Forwarded</span></div>`:''}
+
+/* ---------- refresh loop ---------- */
+async function refresh(force){
+ if(busy&&!force)return;busy=true;
+ try{
+  ALL=(await api('/dashboard/api/chats?filter=all&hours=0')).chats;
+  LIVE=(await api('/dashboard/api/chats?filter=all&hours=24')).chats;
+  badges();chips();
+  const V=VIEWS[view];
+  const sh=(id,on)=>$(id).style.display=on?'flex':'none';
+  sh('#list',!!V.chat);sh('#conv',!!V.chat);$('#pane').style.display=V.chat?'none':'block';
+  $('#info').style.display=V.chat&&sel?'block':'none';
+  if(V.chat){await drawChats(force)}
+  else if(V.people){await drawPeople()}
+  else if(view==='media'){if(force||!$('#mt'))await drawMedia()}
+  else if(view==='analytics'){if(force||Date.now()-anT>30000)await drawAnalytics()}
+ }catch(e){}
+ busy=false}
+
+function drawList(){
+ const q=($('#q').value||'').toLowerCase().trim();
+ let L=chatsFor(view);
+ if(q)L=L.filter(c=>[c.name,c.phone,c.last_text,c.course].join(' ').toLowerCase().includes(q));
+ const h=L.map(c=>`<div class="it ${c.phone===sel?'on':''}" data-p="${esc(c.phone)}">${av(c)}
+  <div class="t"><div class="r1"><b>${esc(c.name||c.phone)}</b><span>${short(c.last_time)}</span></div>
+  <div class="r2">${c.name?esc(c.phone)+' · ':''}${esc((c.last_text||'').replace(/\s+/g,' ').slice(0,70))}</div>
+  <div>${pill(c.status)}${c.fwd_count?'<span class="pill s-fwd">Forwarded</span>':''}${c.bot_paused?'<span class="pill s-paused">Agent paused</span>':''}${c.course?`<span class="pill" style="background:#f1f5f9;color:#334155">${esc(c.course)}</span>`:''}</div></div></div>`).join('');
+ const k=h;if($('#items').dataset.k!==k){$('#items').innerHTML=h||'<div class="e">No chats here yet</div>';$('#items').dataset.k=k}}
+
+async function drawChats(force){
+ drawList();
+ const c=ALL.find(x=>x.phone===sel);
+ if(!sel||!c){
+  $('#conv').innerHTML=`<div class="empty-conv"><div>${IC.chat}<h3 style="margin:6px 0">Select a chat</h3><p>Choose a student from the list to read the full conversation.</p></div></div>`;
+  $('#info').style.display='none';$('#body').classList.remove('conv');return}
+ $('#body').classList.add('conv');$('#info').style.display='block';
+ MSGS=(await api('/dashboard/api/chat/'+encodeURIComponent(sel))).messages;
+ const s=sel+'|'+MSGS.length+'|'+(MSGS.length?MSGS[MSGS.length-1].id:0)+'|'+MSGS.map(m=>m.good).join('')+'|'+c.status+'|'+c.remarks+'|'+c.course+'|'+c.name+'|'+c.bot_paused;
+ if(s===sig&&!force&&lastSel===sel)return;sig=s;
+ const head=`<div id="ch"><button class="ib" id="back" onclick="sel=null;go(view,null)">${IC.back}</button>${av(c)}
+  <div><div class="nm">${esc(c.name||c.phone)}</div><div class="sub">${esc(c.phone)} · ${pill(c.status)}</div></div>
+  <div class="tools"><button class="pbtn ${c.bot_paused?'on':''}" onclick="togglePause()" title="${c.bot_paused?'Let the agent reply again':'Stop the agent from replying in this chat'}">${c.bot_paused?IC.play+'Resume agent':IC.pause+'Pause agent'}</button><button class="ib" id="ibDel" title="Delete this chat" onclick="delChat()">${IC.trash}</button><button class="ib" id="ibInfo" onclick="$('#info').classList.toggle('open')">${IC.info}</button></div></div>`;
+ let last='',body='';
+ for(const m of MSGS){const d=pt(m.time);const k=d?d.toDateString():'';
+  if(k!==last){body+=`<div class="day"><span>${d?dayName(d):''}</span></div>`;last=k}
+  const o=m.direction==='out',adm=o&&m.by_admin;
+  body+=`<div class="row ${o?'out':'in'}"><div class="bub ${o?'out':'in'} ${adm?'adm':''}"><div class="who">${adm?'Admin (sent from dashboard)':(o?'Agent':esc(c.name||'Student'))}</div>
+   ${m.type==='voice'?`<div class="vn">${IC.mic.replace('<svg','<svg style="width:13px;height:13px"')} Voice message</div>`:''}
+   <div class="txt">${fmt(m.text)}</div>
+   <div class="meta">${o&&!adm?`<button class="th ${m.good?'on':''}" data-good="${m.id}" title="Mark as good reply">${m.good?'★ good example':'☆'}</button>`:''}<span>${tm(m.time)}</span></div></div></div>`}
+ const old=$('#msgs'),near=!old||(old.scrollHeight-old.scrollTop-old.clientHeight<120);
+ const dr=$('#cmp'),draft=dr&&lastSel===sel?dr.value:'',foc=dr&&document.activeElement===dr;
+ $('#conv').innerHTML=head+(c.bot_paused?'<div class="pausebar">Agent is paused for this chat: the student\'s messages are saved but nobody replies automatically. Reply from the box below, then press Resume agent.</div>':'')+`<div id="msgs">${body||'<div class="none">No messages yet</div>'}</div>
+  <div class="cmphint">Message sent from here goes to the student on WhatsApp and shows as "Admin". Use it to correct the agent or take over (Pause agent).</div>
+  <div id="cmpw"><textarea id="cmp" rows="1" placeholder="Write a message to this student…"></textarea><button id="cmpb" onclick="sendAdmin()">Send</button></div>`;
+ const nc=$('#cmp');nc.value=draft;if(foc)nc.focus();
+ const m=$('#msgs');if(near||lastSel!==sel)m.scrollTop=m.scrollHeight;lastSel=sel;
+ drawInfo(c)}
+
+function drawInfo(c){
+ const R=(c.remarks||'').split(' | ').filter(Boolean);
+ const row=(k,v)=>`<div class="kv"><span>${k}</span><b>${v?esc(v):'—'}</b></div>`;
+ $('#info').innerHTML=`<div class="big">${av(c)}<b style="font-size:16px">${esc(c.name||'Unknown student')}</b><span style="color:var(--mute)">${esc(c.phone)}</span><div style="margin-top:8px">${pill(c.status)}${c.fwd_count?'<span class="pill s-fwd">Forwarded</span>':''}</div></div>
+  ${row('Interested course',c.course)}${row('City',c.city)}${row('Qualification',c.qualification)}${row('Motive',c.motive)}
+  ${row('Discount asked',c.discount?'Yes':'No')}${row('Agent',c.bot_paused?'Paused (admin)':'Active')}${row('Last message',full(c.last_time))}
+  <h4>Remarks</h4><div class="tl">${R.map(r=>`<div>${esc(r)}</div>`).join('')||'<div style="color:var(--mute)">No remarks yet</div>'}</div>
+  <div class="sheetnote">Name, number, what the student said (remarks) and course sync to the Google Sheet after every message.</div>`}
+
+/* ---------- people tables ---------- */
+async function drawPeople(){
+ const P=(await api('/dashboard/api/people?kind='+view)).people;
+ const col=view==='fol'?'Last message':'Forwarded at';
+ const st=s=>/sent/i.test(s)?'s-Enrolled':/due/i.test(s)?'s-Follow':'s-Interested';
+ $('#pane').innerHTML=`<div class="card tw"><table><tr><th>Student</th><th>Number</th><th>Course</th><th>${col}</th><th>Status</th></tr>`+
+  P.map(r=>`<tr class="cl" data-open="${esc(r.phone)}"><td><div style="display:flex;align-items:center;gap:10px">${av(r)}<b>${esc(r.name||'Unknown')}</b></div></td><td>${esc(r.phone)}</td><td>${esc(r.course||'—')}</td><td>${full(r.last_in||r.fwd_time)}</td><td><span class="pill ${st(r.state)}">${esc(r.state)}</span></td></tr>`).join('')+
+  `</table>${P.length?'':'<div class="e">Nothing here yet</div>'}</div>`}
+
+/* ---------- media ---------- */
+let file=null;
+async function drawMedia(){
+ const M=(await api('/dashboard/api/media')).media;
+ $('#pane').innerHTML=`<div class="card"><div class="up">
+  <input type="text" id="mt" placeholder="Caption / title (e.g. AI Automation Course)">
+  <input type="text" id="mk" placeholder="Keywords, comma separated">
+  <div class="drop" id="dz">${IC.img.replace('<svg','<svg style="width:30px;height:30px"')}<br><span id="dzt">Click or drop a poster image here</span><input id="mf" type="file" accept="image/*" hidden></div>
+  <div><button class="btn" onclick="addMedia()">Upload poster</button></div></div></div>
+  <div class="grid">`+M.map(m=>`<div class="card mc"><img loading="lazy" src="/dashboard/media/${m.id}"><div><b>${esc(m.title||'Untitled')}</b><small>${esc(m.keywords)}</small><button class="btn d" onclick="delMedia(${m.id})">Delete</button></div></div>`).join('')+`</div>`+(M.length?'':'<div class="e">No posters uploaded yet</div>');
+ const dz=$('#dz'),mf=$('#mf');file=null;
+ dz.onclick=()=>mf.click();mf.onchange=()=>{file=mf.files[0];$('#dzt').textContent=file?file.name:'Click or drop a poster image here'};
+ dz.ondragover=e=>{e.preventDefault();dz.classList.add('h')};dz.ondragleave=()=>dz.classList.remove('h');
+ dz.ondrop=e=>{e.preventDefault();dz.classList.remove('h');file=e.dataTransfer.files[0];$('#dzt').textContent=file?file.name:''}}
+async function addMedia(){
+ if(!file){toast('Choose an image first');return}
+ await fetch(`/dashboard/api/media?title=${encodeURIComponent($('#mt').value)}&keywords=${encodeURIComponent($('#mk').value)}`,{method:'POST',headers:{'Content-Type':file.type},body:file});
+ toast('Poster uploaded');drawMedia()}
+async function delMedia(id){if(!confirm('Delete this poster?'))return;await fetch('/dashboard/api/media/'+id,{method:'DELETE'});drawMedia()}
+
+
+/* ---------- analytics ---------- */
+let anDays=14,anT=0,AN=null;
+const SC={'Interested':'#16a34a','Not Interested':'#ef4444','Follow-up Needed':'#f59e0b','Enrolled':'#3b82f6'};
+const dl=s=>new Date(s+'T00:00:00').toLocaleDateString([], {day:'numeric',month:'short'});
+const sum=a=>a.reduce((x,y)=>x+y,0);
+function niceMax(v){const s=v/4;if(s<=1)return 4;const p=Math.pow(10,Math.floor(Math.log10(s))),n=s/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p*4}
+function axes(W,H,L,B,max,labels,step){
+ let o='';for(let i=0;i<=4;i++){const y=H-B-(H-B-10)*i/4;
+  o+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="#e8edf3"/><text x="${L-6}" y="${y+3}" text-anchor="end">${+(max*i/4).toFixed(1)}</text>`}
+ const bw=(W-L)/labels.length;
+ labels.forEach((t,i)=>{if(i%step===0)o+=`<text x="${L+bw*i+bw/2}" y="${H-6}" text-anchor="middle">${t}</text>`});return o}
+function columns(labels,series,o={}){
+ const W=700,H=o.H||250,L=34,B=24,n=labels.length,bw=(W-L)/n,step=Math.ceil(n/(o.maxLabels||10));
+ const tot=labels.map((_,i)=>o.stack?sum(series.map(s=>s.data[i])):Math.max(...series.map(s=>s.data[i])));
+ const max=niceMax(Math.max(1,...tot));let g=axes(W,H,L,B,max,o.lab||labels.map(dl),step);
+ labels.forEach((lb,i)=>{let y0=H-B;const k=series.length,w=o.stack?bw*.62:bw*.7/k;
+  series.forEach((s,j)=>{const v=s.data[i],hh=(H-B-10)*v/max;
+   const x=o.stack?L+bw*i+(bw-w)/2:L+bw*i+bw*.15+w*j;
+   if(o.stack)y0-=hh;
+   const y=o.stack?y0:H-B-hh;
+   g+=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(hh,0)}" rx="3" fill="${s.color}"><title>${o.lab?o.lab[i]:dl(lb)} · ${s.name}: ${v}</title></rect>`})});
+ return `<svg class="cv" viewBox="0 0 ${W} ${H}">${g}</svg>`}
+function lines(labels,series,H=250){
+ const W=700,L=34,B=24,n=labels.length,bw=(W-L)/n,step=Math.ceil(n/10);
+ const max=niceMax(Math.max(1,...series.flatMap(s=>s.data)));let g=axes(W,H,L,B,max,labels.map(dl),step);
+ series.forEach((s,k)=>{const pts=s.data.map((v,i)=>[L+bw*i+bw/2,H-B-(H-B-10)*v/max]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  if(s.area)g+=`<path d="${d} L${pts[pts.length-1][0]} ${H-B} L${pts[0][0]} ${H-B} Z" fill="${s.color}" opacity=".12"/>`;
+  g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach((p,i)=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.6" fill="#fff" stroke="${s.color}" stroke-width="2"><title>${dl(labels[i])} · ${s.name}: ${s.data[i]}</title></circle>`)});
+ return `<svg class="cv" viewBox="0 0 ${W} ${H}">${g}</svg>`}
+function donut(map){
+ const ent=Object.entries(map).filter(([k,v])=>v>0),t=sum(ent.map(e=>e[1]));
+ if(!t)return '<div class="e" style="padding:30px">No data yet</div>';
+ const R=70,C=2*Math.PI*R;let off=0,arcs='';
+ ent.forEach(([k,v])=>{const l=C*v/t;arcs+=`<circle r="${R}" cx="90" cy="90" fill="none" stroke="${SC[k]||'#94a3b8'}" stroke-width="26" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 90 90)"><title>${k}: ${v}</title></circle>`;off+=l});
+ return `<div class="dn-wrap"><svg class="dn" viewBox="0 0 180 180">${arcs}<text x="90" y="88" text-anchor="middle" style="font-size:28px;font-weight:700;fill:#0f172a">${t}</text><text x="90" y="108" text-anchor="middle" style="font-size:11px;fill:#64748b">students</text></svg>
+  <div class="lg">${ent.map(([k,v])=>`<div><i style="background:${SC[k]||'#94a3b8'}"></i>${esc(k)} · <b>${v}</b> (${Math.round(v*100/t)}%)</div>`).join('')}</div></div>`}
+function hbars(list){
+ if(!list.length)return '<div class="e" style="padding:30px">No data yet</div>';
+ const m=Math.max(...list.map(x=>x[1]));
+ return list.map(([n,v])=>`<div class="hb"><span class="n" title="${esc(n)}">${esc(n)}</span><div class="bar"><i style="width:${Math.max(6,v*100/m)}%"></i></div><b>${v}</b></div>`).join('')}
+function delta(a,b){if(a===b)return '<span class="d eq">same as yesterday</span>';
+ const up=a>b,p=b?Math.round(Math.abs(a-b)*100/b)+'%':'new';return `<span class="d ${up?'ps':'ng'}">${up?'▲':'▼'} ${p} vs yesterday</span>`}
+function kpi(t,v,a,b,c){return `<div class="card k" style="--c:${c}"><small>${t}</small><b>${v}</b>${delta(a,b)}</div>`}
+
+async function drawAnalytics(){
+ const d=await api(`/dashboard/api/analytics?days=${anDays}&tz=${-new Date().getTimezoneOffset()}`);AN=d;anT=Date.now();
+ const n=d.labels.length,L=d.labels,td=n-1,yd=n-2;
+ const newTot=L.map((_,i)=>sum(Object.values(d.new_by_status).map(a=>a[i])));
+ const S=d.status,tot=sum(Object.values(S)),good=(S['Interested']||0)+(S['Enrolled']||0);
+ const hrs=d.hours.map((v,i)=>v),hl=hrs.map((_,i)=>String(i).padStart(2,'0')+':00');
+ const peak=hrs.indexOf(Math.max(...hrs));
+ $('#pane').innerHTML=`
+ <div class="rng">${[7,14,30].map(x=>`<button class="${x===anDays?'on':''}" onclick="anDays=${x};drawAnalytics()">Last ${x} days</button>`).join('')}
+  <span style="margin-left:auto;color:var(--mute);font-size:12px">Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} · times in your local timezone</span></div>
+ <div class="card sh" id="sheetcard"></div>
+ <div class="card sh" id="aicard"></div>
+ <div class="kp">
+  ${kpi('Messages from students today',d.msg_in[td],d.msg_in[td],d.msg_in[yd]??0,'#22c1dc')}
+  ${kpi('Active students today',d.active[td],d.active[td],d.active[yd]??0,'#7c5cff')}
+  ${kpi('New students today',newTot[td],newTot[td],newTot[yd]??0,'#f472b6')}
+  ${kpi('Forwarded to head today',d.fwd[td],d.fwd[td],d.fwd[yd]??0,'#f59e0b')}
+  <div class="card k" style="--c:#10b981"><small>Interest rate (all time)</small><b>${tot?Math.round(good*100/tot):0}%</b><span class="d eq">${good} of ${tot} students interested / enrolled</span></div>
+  <div class="card k" style="--c:#475569"><small>All-time totals</small><b>${d.totals.students}</b><span class="d eq">${d.totals.messages} messages · ${d.totals.forwarded} forwarded</span></div>
+ </div>
+ <div class="gr">
+  <div class="card cc wide"><h3>Daily conversation volume</h3><p>Messages received from students vs. replies sent by the counselor</p>
+   ${lines(L,[{name:'Student messages',color:'#22c1dc',data:d.msg_in,area:1},{name:'Counselor replies',color:'#7c5cff',data:d.msg_out}],200)}
+   <div class="lg"><span><i style="background:#22c1dc"></i>Student messages (${sum(d.msg_in)})</span><span><i style="background:#7c5cff"></i>Counselor replies (${sum(d.msg_out)})</span></div></div>
+  <div class="card cc"><h3>New students per day</h3><p>First-time contacts, colored by their current status</p>
+   ${columns(L,Object.keys(d.new_by_status).map(k=>({name:k,color:SC[k],data:d.new_by_status[k]})),{stack:1})}
+   <div class="lg">${Object.keys(SC).map(k=>`<span><i style="background:${SC[k]}"></i>${k}</span>`).join('')}</div></div>
+  <div class="card cc"><h3>Active students per day</h3><p>Unique students who wrote to us each day</p>
+   ${columns(L,[{name:'Active students',color:'#4f46e5',data:d.active}])}</div>
+  <div class="card cc"><h3>Student status</h3><p>Where every conversation stands right now</p>${donut(S)}</div>
+  <div class="card cc"><h3>Most requested courses</h3><p>Interested course captured from chats</p>${hbars(d.courses)}</div>
+  <div class="card cc wide"><h3>Peak hours</h3><p>When students message the most${sum(hrs)?` · busiest around <b>${hl[peak]}</b>`:''}</p>
+   ${columns(hl.map(String),[{name:'Messages',color:'#7c5cff',data:hrs}],{lab:hl,maxLabels:12,H:200})}</div>
+  <div class="card cc"><h3>Handoffs &amp; posters</h3><p>Forwarded to team head and posters sent per day</p>
+   ${columns(L,[{name:'Forwarded',color:'#8b5cf6',data:d.fwd},{name:'Posters sent',color:'#f59e0b',data:d.media}])}
+   <div class="lg"><span><i style="background:#8b5cf6"></i>Forwarded (${sum(d.fwd)})</span><span><i style="background:#f59e0b"></i>Posters sent (${sum(d.media)})</span></div></div>
+  <div class="card cc"><h3>Voice notes &amp; cities</h3><p>Voice messages received per day · top cities</p>
+   ${columns(L,[{name:'Voice notes',color:'#e11d48',data:d.voice}])}
+   <div style="margin-top:14px">${hbars(d.cities)}</div></div>
+ </div>
+ <div class="card danger"><div class="tx"><b>Clear all history</b><br>Deletes every chat, student profile and the rows in the Google Sheet tabs (Student Leads, 2 Hour Summary, 2 Hour Details). Posters are kept. This cannot be undone.</div>
+  <button class="btn dg" onclick="clearAll()">Delete all history</button></div>`;loadSheet();loadAI()}
+
+/* ---------- AI engine status ---------- */
+async function loadAI(){
+ const el=$('#aicard');if(!el)return;
+ let st;try{st=await api('/dashboard/api/ai')}catch(e){return}
+ const bad=st.last_error&&(!st.last_ok||st.last_error.slice(0,19)>st.last_ok);
+ el.innerHTML=`<span class="dot" style="background:${bad?'#ef4444':'#22c55e'}"></span>
+  <div class="tx"><b>AI replies · ${bad?'Problem':'Working'}</b>
+  <div class="ok">${st.last_ok?'Last successful reply: '+full(st.last_ok):'No reply generated since the last restart'} · backup AI (Groq): ${st.groq?'on':'<b style="color:#b91c1c">not set</b>'}</div>
+  ${st.last_error?`<div class="er">Last error: ${esc(st.last_error)}</div>`:''}</div>`}
+
+/* ---------- google sheet status ---------- */
+async function loadSheet(){
+ const el=$('#sheetcard');if(!el)return null;
+ let st;try{st=await api('/dashboard/api/sheet')}catch(e){return null}
+ const c=st.connected;
+ el.innerHTML=`<span class="dot" style="background:${c?'#22c55e':'#ef4444'}"></span>
+  <div class="tx"><b>Google Sheet · ${c?'Connected':'Not connected'}${c?` · tab "${esc(st.tab)}"`:''}</b>
+  ${st.error?`<div class="er">${esc(st.error)}</div>`:''}
+  ${!c&&st.email?`<div class="ok">Share your sheet with <b>${esc(st.email)}</b> as Editor.</div>`:''}
+  ${c?`<div class="ok">${st.last_ok?'Last successful update: '+full(st.last_ok):'No update written since the last restart'} · ${st.rows} students in sheet</div>`:''}
+  ${st.last_error?`<div class="er">Last error: ${esc(st.last_error)}</div>`:''}
+  ${st.syncing?`<div class="ok">Syncing students… ${esc(st.syncing)}</div>`:''}</div>
+  <button class="btn" ${(!c||st.syncing)?'disabled style="opacity:.5;cursor:default"':''} onclick="syncSheet()">Sync all students now</button>`;
+ return st}
+async function syncSheet(){
+ const r=await api('/dashboard/api/sheet/sync',{method:'POST'});
+ if(!r.ok){toast(r.error||'Could not start');return}
+ toast(r.started?'Sync started':'Already syncing');
+ for(let i=0;i<150;i++){const st=await loadSheet();if(!st||!st.syncing)break;await new Promise(x=>setTimeout(x,3000))}
+ loadSheet()}
+
+/* ---------- pause / resume agent ---------- */
+async function togglePause(){
+ const c=ALL.find(x=>x.phone===sel);if(!c)return;
+ const want=!c.bot_paused;
+ const r=await api('/dashboard/api/pause/'+encodeURIComponent(sel),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paused:want})});
+ if(r.ok){c.bot_paused=want?1:0;toast(want?'Agent paused for this chat':'Agent resumed');sig='';refresh(true)}}
+
+/* ---------- admin message ---------- */
+async function sendAdmin(){
+ const t=$('#cmp'),b=$('#cmpb');if(!t||!sel)return;
+ const text=t.value.trim();if(!text)return;
+ b.disabled=true;
+ try{
+  const r=await fetch('/dashboard/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:sel,text})});
+  if(r.status==401){showLogin();return}
+  const d=await r.json();
+  if(d.ok){t.value='';toast('Sent to student');sig='';await refresh(true)}
+  else toast(d.error||'Could not send',6000)
+ }catch(e){toast('Network error - not sent',4000)}
+ b.disabled=false}
+
+/* ---------- delete history ---------- */
+async function delChat(){
+ if(!sel||!confirm('Delete this whole chat, the student profile and the Google Sheet row? This cannot be undone.'))return;
+ await api('/dashboard/api/chat/'+encodeURIComponent(sel),{method:'DELETE'});
+ toast('Chat deleted');sel=null;sig='';go(view,null)}
+async function clearAll(){
+ const t=prompt('This will permanently delete ALL chats, students and sheet rows.\nType DELETE to confirm:');
+ if(t!=='DELETE'){if(t!==null)toast('Not deleted - you must type DELETE');return}
+ const r=await api('/dashboard/api/clear-all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:'DELETE'})});
+ toast(r.ok?'All history deleted':(r.error||'Failed'));sel=null;sig='';anT=0;refresh(true)}
+
+/* ---------- events ---------- */
+document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='cmp'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAdmin()}});
+document.addEventListener('click',async e=>{
+ const it=e.target.closest('.it');if(it){sel=it.dataset.p;sig='';$('#info').classList.remove('open');go(view,sel);return}
+ const g=e.target.closest('[data-good]');if(g){await fetch('/dashboard/api/good/'+g.dataset.good,{method:'POST'});sig='';refresh(true);return}
+ const o=e.target.closest('[data-open]');if(o){go('hist',o.dataset.open)}});
+$('#q').addEventListener('input',()=>{$('#items').dataset.k='';drawList()});
+setInterval(()=>{if($('#app').style.display==='flex')refresh(false)},4000);
+fetch('/dashboard/api/chats').then(r=>{if(r.ok){$('#login').style.display='none';$('#app').style.display='flex';init()}});
+</script>
+</body>
+</html>
