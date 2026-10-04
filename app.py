@@ -350,40 +350,49 @@ def mark_gemini_tts_down():
     print(f"Gemini TTS marked unavailable for {GEMINI_TTS_COOLDOWN_SECONDS}s, using edge-tts meanwhile.")
 
 
+_ai_state = {"last_ok": "", "last_error": ""}
+AI_BUSY_REPLY = ("Is waqt thora zyada rush hai, is liye jawab dene mein der ho rahi hai. "
+                 "Aap ka message mil gaya hai, chand minute mein dobara message kar dein.")
+
+
 def generate_text(prompt):
     """Try Gemini first; if it's busy, out of quota or slow, fall back to Groq
-    right away — same prompt goes to both, so the tone and style of the reply
-    stays the same no matter which one actually answers."""
-    if gemini_is_up():
-        try:
-            response = client.models.generate_content(
-                model=GEMINI_MODEL_NAME, contents=prompt
-            )
-            if response.text:
-                return response.text
-            print("Gemini returned an empty reply, falling back to Groq.")
-        except Exception as e:
-            print(f"Gemini failed, falling back to Groq: {e}")
-            if is_transient_error(e):
-                mark_gemini_down()
+    right away. Same prompt goes to both. If both fail, retry once more after a short wait."""
+    for attempt in range(2):
+        if gemini_is_up():
+            try:
+                response = client.models.generate_content(
+                    model=GEMINI_MODEL_NAME, contents=prompt
+                )
+                if response.text:
+                    _ai_state["last_ok"] = now()
+                    return response.text
+                print("Gemini returned an empty reply, falling back to Groq.")
+                _ai_state["last_error"] = f"{now()} UTC - Gemini returned an empty reply"
+            except Exception as e:
+                print(f"Gemini failed, falling back to Groq: {e}")
+                _ai_state["last_error"] = f"{now()} UTC - Gemini: {str(e)[:250]}"
+                if is_transient_error(e):
+                    mark_gemini_down()
 
-    if groq_client:
-        try:
-            completion = groq_client.chat.completions.create(
-                model=GROQ_CHAT_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return completion.choices[0].message.content
-        except Exception as e:
-            print(f"Groq also failed: {e}")
-    else:
-        print("GROQ_API_KEY is not set — no backup available, only Gemini was tried.")
+        if groq_client:
+            try:
+                completion = groq_client.chat.completions.create(
+                    model=GROQ_CHAT_MODEL,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                _ai_state["last_ok"] = now()
+                return completion.choices[0].message.content
+            except Exception as e:
+                print(f"Groq also failed: {e}")
+                _ai_state["last_error"] = f"{now()} UTC - Groq: {str(e)[:250]}"
+        else:
+            print("GROQ_API_KEY is not set - no backup available, only Gemini was tried.")
+            _ai_state["last_error"] += " | GROQ_API_KEY is not set (no backup AI)"
+        if attempt == 0:
+            time.sleep(2)
 
-    return (
-        "Is waqt thora zyada rush hai is liye jawab dene mein masla ho raha "
-        f"hai. Chand minute mein dobara message kar dein, ya seedha hamari "
-        f"team se baat kar lein: {TEAM_HEAD_NUMBER}"
-    )
+    return AI_BUSY_REPLY  # contains no team head number, so it is never counted as a forward
 
 
 def rag_answer(user_question, user_id=None, voice=False):
@@ -777,6 +786,11 @@ STUDENT_HEADERS = ["Agent name", "Customer contact #", "Customer Name", "Remarks
 SUMMARY_HEADERS = ["Time window", "Total numbers", "New", "Returning", "Interested", "Not Interested",
                    "Fee asked", "Discount requests", "Forwarded to head", "Voice notes received", "Media sent"]
 DETAIL_HEADERS = ["Window end", "Phone", "Name", "Student asked", "Agent replied", "Status"]
+def _norm_phone(v):
+    d = re.sub(r"\D", "", str(v))
+    return d[-10:] if len(d) >= 10 else d
+
+
 _ss = _students = _summary = _details = None
 _row_of = {}
 _manual_rows = set()
@@ -841,11 +855,6 @@ else:
     _missing = [n for n, v in (("GOOGLE_SHEETS_CREDENTIALS_JSON", GOOGLE_SHEETS_CREDENTIALS_JSON), ("GOOGLE_SHEET_ID", GOOGLE_SHEET_ID)) if not v]
     _sheet_state["error"] = "Railway variable(s) missing: " + ", ".join(_missing)
     print("Google Sheets env vars not set - sheets disabled.")
-
-
-def _norm_phone(v):
-    d = re.sub(r"\D", "", str(v))
-    return d[-10:] if len(d) >= 10 else d
 
 
 def _match_course(c):
@@ -1397,6 +1406,11 @@ def dash_delete_chat(phone: str, auth: bool = Depends(check_auth)):
     return {"ok": True}
 
 
+@app.get("/dashboard/api/ai")
+def dash_ai_status(auth: bool = Depends(check_auth)):
+    return {**_ai_state, "groq": bool(groq_client)}
+
+
 @app.get("/dashboard/api/sheet")
 def dash_sheet_status(auth: bool = Depends(check_auth)):
     return {**_sheet_state, "rows": len(_row_of)}
@@ -1482,9 +1496,9 @@ fetch('/dashboard/api/chats').then(r=>{if(r.ok){$('#login').style.display='none'
 def dashboard_page():
     try:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboard.html"), encoding="utf-8") as f:
-            return HTMLResponse(f.read())
+            return HTMLResponse(f.read(), headers={"Cache-Control": "no-store"})
     except Exception:
-        return HTMLResponse(DASHBOARD_HTML)
+        return HTMLResponse(DASHBOARD_HTML, headers={"Cache-Control": "no-store"})
 
 
 from fastapi.responses import RedirectResponse
